@@ -56,6 +56,20 @@ public:
 	void Convolve(unsigned char** Inimg, unsigned char** Outimg, int cols, int rows, float mask[][3], int bias, int depth);
 	afx_msg void OnRegionShrapening();
 	afx_msg void OnRegionEmbosing();
+	afx_msg void OnRegionPrewitt();
+	afx_msg void OnRegionRoberts();
+	afx_msg void OnRegionSobel();
+	afx_msg void OnRegionAverageFiltering();
+	afx_msg void OnRegionMedianFiltering();
+	afx_msg void OnMopologyColorGray();
+	afx_msg void OnMopologyBinarization();
+	afx_msg void OnMopologyErosion();
+	afx_msg void OnMopologyDilation();
+	afx_msg void OnMopologyOpening();
+	afx_msg void OnMopologyClosing();
+	void CopyResultToInput();
+	afx_msg void OnGeometryZoominPixelcopy();
+	afx_msg void OnGeometryZoominBilinarInterpolation();
 };
 
 #ifndef _DEBUG  // ImageProc20190806View.cpp의 디버그 버전

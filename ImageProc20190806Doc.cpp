@@ -14,6 +14,9 @@
 
 #include <propkey.h>
 
+#include <string>
+#include <string.h>
+
 #ifdef _DEBUG
 #define new DEBUG_NEW
 #endif
@@ -34,6 +37,7 @@ CImageProc20190806Doc::CImageProc20190806Doc() noexcept
 	inputImg = NULL;
 	inputImg2 = NULL;
 	resultImg = NULL;	// 사용중인지 확인하기 위해
+	gResultImg = NULL;
 }
 
 CImageProc20190806Doc::~CImageProc20190806Doc()
@@ -52,6 +56,11 @@ CImageProc20190806Doc::~CImageProc20190806Doc()
 		for (int i = 0; i < imageHeight; i++)
 			free(resultImg[i]);		
 		free(resultImg);
+	}
+	if (gResultImg != NULL) {
+		for (int i = 0; i < gImageHeight; i++)
+			free(gResultImg[i]);
+		free(gResultImg);
 	}
 }
 
@@ -168,8 +177,10 @@ void CImageProc20190806Doc::LoadImageFile(CArchive& ar)	//Serialize를 통해 �
 	char type[16], buf[256];
 	CFile* fp = ar.GetFile();
 	CString fname = fp->GetFilePath();	// CStrung - 문자열을 다루는 여러 기능 포함// fp-> 함수 이름 넘김
+	bool isbmp = false;
 
 	// strcmp : 문자열 비교 / strrchr : 
+	
 	if (strcmp(strrchr(fname, '.'), ".ppm") == 0 || strcmp(strrchr(fname, '.'), ".PPM") == 0 ||
 		strcmp(strrchr(fname, '.'), ".pgm") == 0 || strcmp(strrchr(fname, '.'), ".PGM") == 0) 
 	{
@@ -178,7 +189,7 @@ void CImageProc20190806Doc::LoadImageFile(CArchive& ar)	//Serialize를 통해 �
 			ar.ReadString(buf, 255);
 		} while (buf[0] == '#');	// #으로 시작하면 버림
 		sscanf_s(buf, "%d %d", &imageWidth, &imageHeight);	// sscanf 문자열(버퍼)에 들어간걸 처리 (저장된 변수, 숫자로 바꿈, 숫자
-
+		
 		do {
 			ar.ReadString(buf, 255);
 		} while (buf[0] == '#');	// #으로 시작하면 버림
@@ -186,6 +197,27 @@ void CImageProc20190806Doc::LoadImageFile(CArchive& ar)	//Serialize를 통해 �
 
 		if (strcmp(type, "P5") == 0) depth = 1;	// 흑백
 		else depth = 3;							// 컬러
+	}
+	else if (strcmp(strrchr(fname, '.'), ".bmp") == 0 || strcmp(strrchr(fname, '.'), ".BMP") == 0) {
+		// bitmap file header 읽기
+		BITMAPFILEHEADER bmfh;
+		ar.Read((LPSTR)&bmfh, sizeof(bmfh));
+		// BMP 파일임을 나타내는 "BM" 마커가 있는지 확인
+		if (bmfh.bfType != (WORD)('B' | ('M' << 8))) return;
+		// bitmap info 읽기
+		BITMAPINFOHEADER bih;
+		ar.Read((LPSTR)&bih, sizeof(bih));
+
+		imageHeight = bih.biHeight;
+		imageWidth = bih.biWidth;
+		depth = bih.biBitCount / 8;
+
+		if (depth == 1) {
+			// 팔레트 존재
+			BYTE palette[256 * 4];
+			ar.Read(palette, 256 * 4);
+		}
+		isbmp = true;
 	}
 	else if (strcmp(strrchr(fname, '.'), ".raw") == 0 || strcmp(strrchr(fname, '.'), ".RAW") == 0)
 	{
@@ -201,7 +233,7 @@ void CImageProc20190806Doc::LoadImageFile(CArchive& ar)	//Serialize를 통해 �
 	// 메모리 할당
 	//메모리 얼로케이션?
 	//inputImg : unsigned char 포인터의 포인터
-	inputImg = (unsigned char**)malloc(imageHeight * sizeof(unsigned char*));
+	inputImg = (unsigned char **)malloc(imageHeight * sizeof(unsigned char *));
 	resultImg= (unsigned char**)malloc(imageHeight * sizeof(unsigned char*));
 
 	for (int i = 0; i < imageHeight; i++) {
@@ -211,8 +243,31 @@ void CImageProc20190806Doc::LoadImageFile(CArchive& ar)	//Serialize를 통해 �
 	}
 
 	// 영상데이터 읽기
-	for (int i = 0; i < imageHeight; i++) {
-		ar.Read(inputImg[i], imageWidth * depth);	//ar.Read는 아스키 코드 문자열을 읽음
+	if (!isbmp) {
+		for (int i = 0; i < imageHeight; i++) {
+			ar.Read(inputImg[i], imageWidth * depth);	//ar.Read는 아스키 코드 문자열을 읽음
+		}
+	}
+	else {
+		// 파일에서 읽어서 저장
+		BYTE nu[4*3];
+		int widthfile;
+		widthfile = (imageWidth * 8 + 31) / 32 * 4;
+		for (int i = 0; i < imageHeight; i++) {
+			if (depth == 1)
+				ar.Read(inputImg[imageHeight - 1 - i], imageWidth * depth);
+			else {
+				for (size_t j = 0; j < imageWidth; j++) {
+					BYTE r, g, b;
+					ar.Read(&b, 1); ar.Read(&g, 1); ar.Read(&r, 1);
+					inputImg[imageHeight - 1 - i][3 * j + 0] = r;
+					inputImg[imageHeight - 1 - i][3 * j + 1] = g;
+					inputImg[imageHeight - 1 - i][3 * j + 2] = b;
+				}
+			}
+			if (widthfile - imageWidth != 0) 
+				ar.Read(nu, (widthfile - imageWidth) * depth);
+		}
 	}
 }
 
@@ -224,6 +279,7 @@ void CImageProc20190806Doc::LoadSecondImageFile(CArchive& ar)
 	char type[16], buf[256];
 	CFile* fp = ar.GetFile();
 	CString fname = fp->GetFilePath();	// CStrung - 문자열을 다루는 여러 기능 포함// fp-> 함수 이름 넘김
+	bool isbmp = false;
 
 	int imgw, imgh, imgd;
 
@@ -244,6 +300,27 @@ void CImageProc20190806Doc::LoadSecondImageFile(CArchive& ar)
 
 		if (strcmp(type, "P5") == 0) imgd = 1;	// 흑백
 		else imgd = 3;							// 컬러
+	}
+	else if (strcmp(strrchr(fname, '.'), ".bmp") == 0 || strcmp(strrchr(fname, '.'), ".BMP") == 0) {
+		// bitmap file header 읽기
+		BITMAPFILEHEADER bmfh;
+		ar.Read((LPSTR)&bmfh, sizeof(bmfh));
+		// BMP 파일임을 나타내는 "BM" 마커가 있는지 확인
+		if (bmfh.bfType != (WORD)('B' | ('M' << 8))) return;
+		// bitmap info 읽기
+		BITMAPINFOHEADER bih;
+		ar.Read((LPSTR)&bih, sizeof(bih));
+
+		imgh = bih.biHeight;
+		imgw = bih.biWidth;
+		imgd = bih.biBitCount / 8;
+
+		if (imgd == 1) {
+			// 팔레트 존재
+			BYTE palette[256 * 4];
+			ar.Read(palette, 256 * 4);
+		}
+		isbmp = true;
 	}
 	else if (strcmp(strrchr(fname, '.'), ".raw") == 0 || strcmp(strrchr(fname, '.'), ".RAW") == 0)
 	{
@@ -270,10 +347,31 @@ void CImageProc20190806Doc::LoadSecondImageFile(CArchive& ar)
 		//inputImg[] : unsigned char 포인터 // malloc(imageWidth * depth) 포인터의 값
 		inputImg2[i] = (unsigned char*)malloc(imageWidth * depth);
 	}
-
+	 
 	// 영상데이터 읽기
-	for (int i = 0; i < imageHeight; i++) {
-		ar.Read(inputImg2[i], imageWidth * depth);	//ar.Read는 아스키 코드 문자열을 읽음
-
+	if (!isbmp) {
+		for (int i = 0; i < imageHeight; i++) 
+			ar.Read(inputImg2[i], imageWidth * depth);	//ar.Read는 아스키 코드 문자열을 읽음
+	}
+	else {
+		// 파일에서 읽어서 저장
+		BYTE nu[4 * 3];
+		int widthfile;
+		widthfile = (imageWidth * 8 + 31) / 32 * 4;
+		for (int i = 0; i < imageHeight; i++) {
+			if (depth == 1)
+				ar.Read(inputImg2[imageHeight - 1 - i], imageWidth * depth);
+			else {
+				for (size_t j = 0; j < imageWidth; j++) {
+					BYTE r, g, b;
+					ar.Read(&b, 1); ar.Read(&g, 1); ar.Read(&r, 1);
+					inputImg2[imageHeight - 1 - i][3 * j + 0] = r;
+					inputImg2[imageHeight - 1 - i][3 * j + 1] = g;
+					inputImg2[imageHeight - 1 - i][3 * j + 2] = b;
+				}
+			}
+			if (widthfile - imageWidth != 0)
+				ar.Read(nu, (widthfile - imageWidth) * depth);
+		}
 	}
 }
