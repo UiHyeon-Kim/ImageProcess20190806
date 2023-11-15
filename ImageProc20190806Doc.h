@@ -59,6 +59,11 @@ public:
 	int imageWidth;
 	int imageHeight;
 	int depth;			// 흑백 1, 칼라 3 저장 됨
+
+	int gImageWidth;
+	int gImageHeight;
+	unsigned char** gResultImg;
+
 	void LoadImageFile(CArchive& ar);
 	void LoadSecondImageFile(CArchive& ar);
 };

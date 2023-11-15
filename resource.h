@@ -7,6 +7,9 @@
 #define IDR_MAINFRAME                   128
 #define IDR_ImageProc20190806TYPE       130
 #define ID_WINDOW_MANAGER               131
+#define IDD_DIALOG_ANGLEINPUT           311
+#define IDD_DIALOG1                     311
+#define IDC_EDIT2                       1001
 #define ID_32771                        32771
 #define ID_32772                        32772
 #define ID_PIXEL_ADD                    32773
@@ -36,14 +39,53 @@
 #define ID_REGION_SMOOTHING             32797
 #define ID_REGION_SHRAPENING            32798
 #define ID_REGION_EMBOSING              32799
+#define ID_Menu                         32800
+#define ID_32801                        32801
+#define ID_Region                       32802
+#define ID_REGION_                      32803
+#define ID_32804                        32804
+#define ID_32805                        32805
+#define ID_REGION_PREWITT               32806
+#define ID_REGION_ROBERTS               32807
+#define ID_REGION_SOBEL                 32808
+#define ID_32809                        32809
+#define ID_REGION_AVERAGE_FILTERING     32810
+#define ID_32811                        32811
+#define ID_REGION_MEDIAN_FILTERING      32812
+#define ID_32813                        32813
+#define ID_32814                        32814
+#define ID_32815                        32815
+#define ID_32816                        32816
+#define ID_EROSION                      32817
+#define ID_32818                        32818
+#define ID_MOPOLOGY_COLOR_GRAY          32819
+#define ID_32820                        32820
+#define ID_MOPOLOGY_BINARIZATION        32821
+#define ID_MOPOLOGY_EROSION             32822
+#define ID_MOPOLOGY_DILATION            32823
+#define ID_MOPOLOGY_                    32824
+#define ID_MOPOLOGY_OPENING             32825
+#define ID_MOPOLOGY_CLOSING             32826
+#define ID_32827                        32827
+#define ID_GEOMETRY_ZOOMIN_PIXELCOPY    32828
+#define ID_32829                        32829
+#define ID_GEOMETRY_ZOOMIN_BILINAR_INTERPOLATION 32830
+#define ID_32831                        32831
+#define ID_GEOMETRY_ZOOMOUT_SUBSAMPLING 32832
+#define ID_32833                        32833
+#define ID_GEOMETRY_ZOOMOUT_MEAN_SUB    32834
+#define ID_32835                        32835
+#define ID_GEOMETRY_ZOOMOUT_AVG_FILTERING 32836
+#define ID_32837                        32837
+#define ID_GEOMETRY_ROTATION            32838
 
 // Next default values for new objects
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
-#define _APS_NEXT_RESOURCE_VALUE        311
-#define _APS_NEXT_COMMAND_VALUE         32800
-#define _APS_NEXT_CONTROL_VALUE         1000
+#define _APS_NEXT_RESOURCE_VALUE        313
+#define _APS_NEXT_COMMAND_VALUE         32839
+#define _APS_NEXT_CONTROL_VALUE         1002
 #define _APS_NEXT_SYMED_VALUE           310
 #endif
 #endif
