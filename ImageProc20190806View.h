@@ -74,6 +74,15 @@ public:
 	afx_msg void OnGeometryZoomoutMeanSub();
 	afx_msg void OnGeometryZoomoutAvgFiltering();
 	afx_msg void OnGeometryRotation();
+	afx_msg void OnGeometryVerticalFlip();
+	afx_msg void OnGeometryHolizantalFlip();
+	afx_msg void OnGeometryWarping();
+	afx_msg void OnLButtonDown(UINT nFlags, CPoint point);
+	afx_msg void OnLButtonUp(UINT nFlags, CPoint point);
+	afx_msg void OnAviView();
+	bool bAviMode;
+	CString AviFileName;
+	void LoadAviFIle(CDC* pDC);
 };
 
 #ifndef _DEBUG  // ImageProc20190806View.cpp의 디버그 버전

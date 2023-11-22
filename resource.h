@@ -78,13 +78,21 @@
 #define ID_GEOMETRY_ZOOMOUT_AVG_FILTERING 32836
 #define ID_32837                        32837
 #define ID_GEOMETRY_ROTATION            32838
+#define ID_32839                        32839
+#define ID_32840                        32840
+#define ID_32841                        32841
+#define ID_GEOMETRY_HOLIZANTAL_FLIP     32842
+#define ID_GEOMETRY_VERTICAL_FLIP       32843
+#define ID_GEOMETRY_WARPING             32844
+#define ID_AVI32845                     32845
+#define ID_AVI_VIEW                     32846
 
 // Next default values for new objects
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NEXT_RESOURCE_VALUE        313
-#define _APS_NEXT_COMMAND_VALUE         32839
+#define _APS_NEXT_COMMAND_VALUE         32847
 #define _APS_NEXT_CONTROL_VALUE         1002
 #define _APS_NEXT_SYMED_VALUE           310
 #endif
