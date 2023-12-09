@@ -12,11 +12,18 @@
 
 #include "ImageProc20190806Doc.h"
 #include "ImageProc20190806View.h"
+#include "COpenCvDlg.h"
+
+#include <vfw.h>
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
 #endif
 
+#define TWO_IMAGES 1
+#define THREE_IMAGES 2
+#define TWO_IMAGES_SCALED 4
+#define MORPHING 8
 
 // CImageProc20190806View
 
@@ -61,6 +68,8 @@ ON_COMMAND(ID_GEOMETRY_WARPING, &CImageProc20190806View::OnGeometryWarping)
 ON_WM_LBUTTONDOWN()
 ON_WM_LBUTTONUP()
 ON_COMMAND(ID_AVI_VIEW, &CImageProc20190806View::OnAviView)
+ON_COMMAND(ID_GEOMETRY_MORPHING, &CImageProc20190806View::OnGeometryMorphing)
+ON_COMMAND(ID_OPENCV, &CImageProc20190806View::OnOpencv)
 END_MESSAGE_MAP()
 
 // CImageProc20190806View 생성/소멸
@@ -87,6 +96,7 @@ BOOL CImageProc20190806View::PreCreateWindow(CREATESTRUCT& cs)
 
 void CImageProc20190806View::OnDraw(CDC* pDC)
 {
+	// pDC->TextOutA(100, 100, _T("테스트출력"));
 	CImageProc20190806Doc* pDoc = GetDocument();
 	ASSERT_VALID(pDoc);
 	if (!pDoc)
@@ -99,51 +109,29 @@ void CImageProc20190806View::OnDraw(CDC* pDC)
 		return;
 	}
 
-	// TODO: 여기에 원시 데이터에 대한 그리기 코드를 추가합니다.
-	// pDC->TextOutA(100, 100, _T("테스트출력"));
-
 	int x, y;
-	if (pDoc->inputImg != NULL) {
-		if (pDoc->depth == 1) {		// 반복문 바깥에 컬러 조건을 넣음으로써 줄은 길어져도 속도면에서 좋음
-			for (y = 0; y < pDoc->imageHeight; y++) {
-				for (x = 0; x < pDoc->imageWidth; x++) {
-					pDC->SetPixel(x, y, RGB(pDoc->inputImg[y][x],	// 삽입 이미지 공간 생성
-											pDoc->inputImg[y][x],
-											pDoc->inputImg[y][x]));
-				}
-			}
-		}
-		else {	// 컬러일 때
-			for (y = 0; y < pDoc->imageHeight; y++) {
-				for (x = 0; x < pDoc->imageWidth; x++) {
-					pDC->SetPixel(x, y, RGB(pDoc->inputImg[y][3 * x + 0],	// red 성분   3*x+0	
-											pDoc->inputImg[y][3 * x + 1],	// green 성분 3*x+1
-											pDoc->inputImg[y][3 * x + 2]));	// blue 성분  3*x+2
-				}
+	
+	if (pDoc->depth == 1) {		// 반복문 바깥에 컬러 조건을 넣음으로써 줄은 길어져도 속도면에서 좋음
+		for (y = 0; y < pDoc->imageHeight; y++) {
+			for (x = 0; x < pDoc->imageWidth; x++) {
+				pDC->SetPixel(x, y, RGB(pDoc->inputImg[y][x],	// 삽입 이미지 공간 생성
+										pDoc->inputImg[y][x],
+										pDoc->inputImg[y][x]));
 			}
 		}
 	}
-	if (pDoc->resultImg != NULL) {
-		if (pDoc->depth == 1) {
-			for (y = 0; y < pDoc->imageHeight; y++) {
-				for (x = 0; x < pDoc->imageWidth; x++) {
-					pDC->SetPixel(x + pDoc->imageWidth + 20, y, RGB(pDoc->resultImg[y][x],
-						pDoc->resultImg[y][x],
-						pDoc->resultImg[y][x]));
-				}
-			}
-		}
-		else {
-			for (y = 0; y < pDoc->imageHeight; y++) {
-				for (x = 0; x < pDoc->imageWidth; x++) {
-					pDC->SetPixel(x + pDoc->imageWidth + 20, y, RGB(pDoc->resultImg[y][3 * x + 0],
-						pDoc->resultImg[y][3 * x + 1],	
-						pDoc->resultImg[y][3 * x + 2]));
-				}
+	else {	// 컬러일 때
+		for (y = 0; y < pDoc->imageHeight; y++) {
+			for (x = 0; x < pDoc->imageWidth; x++) {
+				pDC->SetPixel(x, y, RGB(pDoc->inputImg[y][3 * x + 0],	// red 성분   3*x+0	
+										pDoc->inputImg[y][3 * x + 1],	// green 성분 3*x+1
+										pDoc->inputImg[y][3 * x + 2]));	// blue 성분  3*x+2
 			}
 		}
 	}
-	if (pDoc->inputImg2 != NULL){
+	
+	
+	if (viewMode == THREE_IMAGES){
 		if (pDoc->depth == 1) {
 			for (y = 0; y < pDoc->imageHeight; y++) {
 				for (x = 0; x < pDoc->imageWidth; x++) {
@@ -162,9 +150,27 @@ void CImageProc20190806View::OnDraw(CDC* pDC)
 				}
 			}
 		}
+		if (pDoc->depth == 1) {
+			for (y = 0; y < pDoc->imageHeight; y++) {
+				for (x = 0; x < pDoc->imageWidth; x++) {
+					pDC->SetPixel(x + pDoc->imageWidth + 20, y, RGB(pDoc->resultImg[y][x],
+						pDoc->resultImg[y][x],
+						pDoc->resultImg[y][x]));
+				}
+			}
+		}
+		else {
+			for (y = 0; y < pDoc->imageHeight; y++) {
+				for (x = 0; x < pDoc->imageWidth; x++) {
+					pDC->SetPixel(x + pDoc->imageWidth + 20, y, RGB(pDoc->resultImg[y][3 * x + 0],
+						pDoc->resultImg[y][3 * x + 1],
+						pDoc->resultImg[y][3 * x + 2]));
+				}
+			}
+		}
 	}
 
-	if (pDoc->gResultImg != NULL) {
+	if (viewMode == TWO_IMAGES_SCALED) {
 		if (pDoc->depth == 1) {
 			for (y = 0; y < pDoc->gImageHeight; y++) {
 				for (x = 0; x < pDoc->gImageWidth; x++) {
@@ -183,6 +189,67 @@ void CImageProc20190806View::OnDraw(CDC* pDC)
 				}
 			}
 		}
+	}
+	else if (viewMode == MORPHING) {
+		if (pDoc->depth == 1) {
+			for (y = 0; y < pDoc->imageHeight; y++) {
+				for (x = 0; x < pDoc->imageWidth; x++) {
+					pDC->SetPixel(x + 2 * (pDoc->imageWidth + 20), y, RGB(pDoc->inputImg2[y][x],
+						pDoc->inputImg2[y][x],
+						pDoc->inputImg2[y][x]));
+				}
+			}
+		}
+		else {
+			for (y = 0; y < pDoc->imageHeight; y++) {
+				for (x = 0; x < pDoc->imageWidth; x++) {
+					pDC->SetPixel(x + 2 * (pDoc->imageWidth + 20), y, RGB(pDoc->inputImg2[y][3 * x + 0],	// red 성분   3*x+0	
+						pDoc->inputImg2[y][3 * x + 1],						// green 성분 3*x+1
+						pDoc->inputImg2[y][3 * x + 2]));						// blue 성분  3*x+2
+				}
+			}
+		}
+		if (pDoc->depth == 1) {
+			for (int i = 0; i < 10; i++) {
+				for (y = 0; y < pDoc->imageHeight; y++) {
+					for (x = 0; x < pDoc->imageWidth; x++) {
+						pDC->SetPixel(x + pDoc->imageWidth + 20, y,
+							RGB(pDoc->morphedImg[i][y][x],
+								pDoc->morphedImg[i][y][x],
+								pDoc->morphedImg[i][y][x]));
+					}
+				}
+			}
+		}
+		/*else {
+			for (int i = 0; i < 10; i++)
+				for (y = 0; y < pDoc->imageHeight; y++)
+					for (x = 0; x < pDoc->imageWidth; x++)
+						pDC->SetPixel(x + pDoc->imageWidth + 20, y, RGB(pDoc->morphedImg[i][y][3 * x + 0],
+							pDoc->morphedImg[i][y][3 * x + 1],
+							pDoc->morphedImg[i][y][3 * x + 2]));
+		}*/
+	}
+	else {
+		if (pDoc->depth == 1) {
+			for (y = 0; y < pDoc->imageHeight; y++) {
+				for (x = 0; x < pDoc->imageWidth; x++) {
+					pDC->SetPixel(x + pDoc->imageWidth + 20, y, RGB(pDoc->resultImg[y][x],
+						pDoc->resultImg[y][x],
+						pDoc->resultImg[y][x]));
+				}
+			}
+		}
+		else {
+			for (y = 0; y < pDoc->imageHeight; y++) {
+				for (x = 0; x < pDoc->imageWidth; x++) {
+					pDC->SetPixel(x + pDoc->imageWidth + 20, y, RGB(pDoc->resultImg[y][3 * x + 0],
+						pDoc->resultImg[y][3 * x + 1],
+						pDoc->resultImg[y][3 * x + 2]));
+				}
+			}
+		}
+			
 	}
 }
 
@@ -232,6 +299,7 @@ void CImageProc20190806View::OnPixelAdd()
 			else if (value < 0) value = 0;
 			pDoc->resultImg[y][x] = value;
 		}
+	viewMode = TWO_IMAGES;
 	Invalidate(); // 데이터 수정한걸 다시 그리면서 화면에 나타남
 }
 
@@ -247,6 +315,7 @@ void CImageProc20190806View::OnPixelSub()
 			else if (value < 0) value = 0;
 			pDoc->resultImg[y][x] = value;
 		}
+	viewMode = TWO_IMAGES;
 	Invalidate();
 }
 
@@ -262,6 +331,7 @@ void CImageProc20190806View::OnPixelMul()
 			else if (value < 0) value = 0;
 			pDoc->resultImg[y][x] = value;
 		}
+	viewMode = TWO_IMAGES;
 	Invalidate();
 }
 
@@ -277,6 +347,7 @@ void CImageProc20190806View::OnPixelDiv()
 			else if (value < 0) value = 0;
 			pDoc->resultImg[y][x] = value;
 		}
+	viewMode = TWO_IMAGES;
 	Invalidate();
 }
 
@@ -311,6 +382,7 @@ void CImageProc20190806View::OnPixelHistoEq()
 			k = pDoc->inputImg[y][x];
 			pDoc->resultImg[y][x] = (float)sum[k] / N * 255; // float 캐스트 연산자로 소수점을 구해야함 안그럼 0과 1 흰 검으로 나타남
 		}
+	viewMode = TWO_IMAGES;
 	Invalidate();
 }
 
@@ -351,6 +423,7 @@ void CImageProc20190806View::OnPixelContrastStretching()
 			pDoc->resultImg[y][x] = stretchedValue;
 		}
 	}
+	viewMode = TWO_IMAGES;
 	Invalidate();
 }
 
@@ -367,6 +440,7 @@ void CImageProc20190806View::OnPixelBinarization()
 			if (value > threshold)	pDoc->resultImg[y][x] = 255;	// 받은 각 픽셀의 값이 128보다 크면 흰
 			else					pDoc->resultImg[y][x] = 0;		// 픽셀의 값이 128보다 같거나 작으면 검
 		}
+	viewMode = TWO_IMAGES;
 	Invalidate();
 }
 
@@ -423,7 +497,7 @@ void CImageProc20190806View::OnPixelTwoImageAdd()
 			else if (value < 0) value = 0;		//  " 0보다 작아지면 0으로 고정
 			pDoc->resultImg[y][x] = value;
 		}
-
+	viewMode = THREE_IMAGES;
 	Invalidate();
 }
 
@@ -455,6 +529,7 @@ void CImageProc20190806View::OnPixelTwoImageSub()
 			else if (value < 0) value = 0;		//  " 0보다 작아지면 0으로 고정
 			pDoc->resultImg[y][x] = value;
 		}
+	viewMode = THREE_IMAGES;
 	Invalidate();
 }
 
@@ -484,6 +559,7 @@ void CImageProc20190806View::OnPixelTwoImageMul()
 
 			pDoc->resultImg[y][x] = value;
 		}
+	viewMode = THREE_IMAGES;
 	Invalidate();
 }
 
@@ -513,6 +589,7 @@ void CImageProc20190806View::OnPixelTwoImageDiv()
 
 			pDoc->resultImg[y][x] = value;
 		}
+	viewMode = THREE_IMAGES;
 	Invalidate();
 }
 
@@ -524,6 +601,7 @@ void CImageProc20190806View::OnRegionSmoothing()
 						   {1/9.0,1/9.0,1/9.0},
 						   {1/9.0,1/9.0,1/9.0} };
 	Convolve(pDoc->inputImg, pDoc->resultImg, pDoc->imageWidth, pDoc->imageHeight, kernel, 0, pDoc->depth);
+	viewMode = TWO_IMAGES;
 	Invalidate();
 }
 
@@ -581,7 +659,7 @@ void CImageProc20190806View::OnRegionShrapening()
 						   {-1,9,-1},
 						   {-1,-1,-1} };*/
 	Convolve(pDoc->inputImg, pDoc->resultImg, pDoc->imageWidth, pDoc->imageHeight, kernel, 0, pDoc->depth);
-
+	viewMode = TWO_IMAGES;
 	Invalidate();
 }
 
@@ -593,7 +671,7 @@ void CImageProc20190806View::OnRegionEmbosing()
 					       {0, 0, 0},
 						   {0, 0, 1} };
 	Convolve(pDoc->inputImg, pDoc->resultImg, pDoc->imageWidth, pDoc->imageHeight, kernel, 0, pDoc->depth);
-
+	viewMode = TWO_IMAGES;
 	Invalidate();
 }
 
@@ -637,6 +715,7 @@ void CImageProc20190806View::OnRegionPrewitt()
 	free(Er);
 	free(Ec);
 
+	viewMode = TWO_IMAGES;
 	Invalidate();
 }
 
@@ -680,6 +759,7 @@ void CImageProc20190806View::OnRegionRoberts()
 	free(Er);
 	free(Ec);
 
+	viewMode = TWO_IMAGES;
 	Invalidate();
 }
 
@@ -723,6 +803,7 @@ void CImageProc20190806View::OnRegionSobel()
 	free(Er);
 	free(Ec);
 
+	viewMode = TWO_IMAGES;
 	Invalidate();
 }
 
@@ -767,6 +848,7 @@ void CImageProc20190806View::OnRegionAverageFiltering()
 				pDoc->resultImg[y][3 * x + 2] = bsum / count;
 			}
 		}
+	viewMode = TWO_IMAGES;
 	Invalidate();
 }
 
@@ -861,6 +943,7 @@ void CImageProc20190806View::OnRegionMedianFiltering()
 				pDoc->resultImg[y][3 * x + 2] = n[4];
 			}
 		}
+	viewMode = TWO_IMAGES;
 	Invalidate();
 }
 
@@ -879,6 +962,7 @@ void CImageProc20190806View::OnMopologyColorGray()
 			pDoc->inputImg[y][3 * x + 1] = gray;
 			pDoc->inputImg[y][3 * x + 2] = gray;
 		}
+	viewMode = TWO_IMAGES;
 	Invalidate();
 }
 
@@ -909,6 +993,7 @@ void CImageProc20190806View::OnMopologyBinarization()
 				}
 			}
 		}
+	viewMode = TWO_IMAGES;
 	Invalidate();
 }
 
@@ -946,6 +1031,7 @@ void CImageProc20190806View::OnMopologyErosion()
 				pDoc->resultImg[y][3 * x + 2] = bmin;
 			}
 		}
+	viewMode = TWO_IMAGES;
 	Invalidate();
 }
 
@@ -983,6 +1069,7 @@ void CImageProc20190806View::OnMopologyDilation()
 				pDoc->resultImg[y][3 * x + 2] = bmax;
 			}
 		}
+	viewMode = TWO_IMAGES;
 	Invalidate();
 }
 
@@ -1070,6 +1157,7 @@ void CImageProc20190806View::OnGeometryZoominPixelcopy()
 		for (x = 0; x < pDoc->imageWidth; x++)
 			pDoc->gResultImg[y * yscale][x * xscale] = pDoc->inputImg[y][x];
 	*/
+	viewMode = TWO_IMAGES_SCALED;
 	Invalidate();
 }
 
@@ -1139,6 +1227,7 @@ void CImageProc20190806View::OnGeometryZoominBilinarInterpolation()
 
 			}
 		}	
+	viewMode = TWO_IMAGES_SCALED;
 	Invalidate();
 }
 
@@ -1174,6 +1263,8 @@ void CImageProc20190806View::OnGeometryZoomoutSubsampling()
 				pDoc->gResultImg[y][3 * x + 2] = pDoc->inputImg[y * yscale][3 * (x * xscale) + 2];
 			}
 		}
+
+	viewMode = TWO_IMAGES_SCALED;
 	Invalidate();
 }
 
@@ -1233,6 +1324,7 @@ void CImageProc20190806View::OnGeometryZoomoutAvgFiltering()
 				pDoc->gResultImg[y / yscale][3 * (x / xscale) + 2] = bsum / (xscale * yscale);
 			}
 		}
+	viewMode = TWO_IMAGES_SCALED;
 	Invalidate();
 }
 
@@ -1299,6 +1391,7 @@ void CImageProc20190806View::OnGeometryRotation()
 				}
 			}
 		}
+	viewMode = TWO_IMAGES_SCALED;
 	Invalidate();
 }
 void CImageProc20190806View::OnGeometryHolizantalFlip()
@@ -1317,6 +1410,7 @@ void CImageProc20190806View::OnGeometryHolizantalFlip()
 				pDoc->resultImg[y][3 * x + 2] = pDoc->inputImg[y][3 * (pDoc->imageWidth - 1 - x) + 2];
 			}
 		}
+	viewMode = TWO_IMAGES;
 	Invalidate();
 }
 
@@ -1336,6 +1430,7 @@ void CImageProc20190806View::OnGeometryVerticalFlip()
 				pDoc->resultImg[pDoc->imageHeight - 1 - y][3 * x + 2] = pDoc->inputImg[y][3 * x + 2];
 			}
 		}
+	viewMode = TWO_IMAGES;
 	Invalidate();
 }
 
@@ -1439,6 +1534,7 @@ void CImageProc20190806View::OnGeometryWarping()
 				pDoc->resultImg[y][3 * x + 2] = pDoc->inputImg[source_y][3 * source_x + 2];
 			}
 		}
+	viewMode = TWO_IMAGES;
 	Invalidate();
 };
 
@@ -1500,5 +1596,230 @@ void CImageProc20190806View::OnAviView()
 
 void CImageProc20190806View::LoadAviFIle(CDC* pDC)
 {
-	// TODO: 여기에 구현 코드 추가.
+	PAVIFILE pavi;	// avi 파일 열어서 처리
+	AVIFILEINFO	fi;	// 파일에 대한 정보
+	int stm;
+	PAVISTREAM pstm = NULL;	// 스트림을 처리하기 위한 변수
+	AVISTREAMINFO si;			// 스트림 정보
+	PGETFRAME pfrm = NULL;		
+	int frame;
+	LPBITMAPINFOHEADER pbmpih;	
+	unsigned char* image;
+	int x, y;
+
+	AVIFileInit();
+	AVIFileOpen(&pavi, AviFileName, OF_READ|OF_SHARE_DENY_NONE, NULL);
+	AVIFileInfo(pavi, &fi, sizeof(AVIFILEINFO));
+
+	for (stm = 0; stm < fi.dwStreams; stm++) {
+		AVIFileGetStream(pavi, &pstm, 0, stm);
+		AVIStreamInfo(pstm, &si, sizeof(si));
+		if (si.fccType == streamtypeVIDEO) {
+			pfrm = AVIStreamGetFrameOpen(pstm, NULL);	// 한 프레임을 잘라서 가져옴
+			for (frame = 0; frame < si.dwLength; frame++) {
+				pbmpih = (LPBITMAPINFOHEADER)AVIStreamGetFrame(pfrm, frame);
+				if (!pbmpih) continue;
+				image = (unsigned char*)((LPSTR)pbmpih + (WORD)pbmpih->biSize);
+				/*
+				for (y = 0; y < fi.dwHeight; y++)
+					for (x = 0; x < fi.dwWidth; x++) {
+						pDC->SetPixel(x, fi.dwHeight - 1 - y,
+							RGB(image[3 * (y * fi.dwWidth + x) + 2],
+								image[3 * (y * fi.dwWidth + x) + 1],
+								image[3 * (y * fi.dwWidth + x) + 0]));
+					}
+				*/
+				::SetDIBitsToDevice(pDC->GetSafeHdc(), 0, 0, fi.dwWidth, fi.dwHeight, 0, 0, 0, fi.dwWidth, image, (BITMAPINFO*)pbmpih, DIB_RGB_COLORS);
+				Sleep(33);
+			}
+		}
+	}
+	AVIStreamGetFrameClose(pfrm);
+	AVIStreamRelease(pstm);
+	AVIFileRelease(pavi);
+	AVIFileExit();
+}
+
+#define NUM_FRAMES 10
+void CImageProc20190806View::OnGeometryMorphing()
+{
+	CImageProc20190806Doc* pDoc = GetDocument();
+
+	control_line source_lines[23] =
+	{ {116,7,207,5},{34,109,90,21},{55,249,30,128},{118,320,65,261},
+	{123,321,171,321},{179,319,240,264},{247,251,282,135},{281,114,228,8},
+	{78,106,123,109},{187,115,235,114},{72,142,99,128},{74,150,122,154},
+	{108,127,123,146},{182,152,213,132},{183,159,229,157},{219,131,240,154},
+	{80,246,117,212},{127,222,146,223},{154,227,174,221},{228,252,183,213},
+	{114,255,186,257},{109,258,143,277},{152,278,190,262} };
+	control_line dest_lines[23] =
+	{ {120,8,200,6},{12,93,96,16},{74,271,16,110},{126,336,96,290},
+	{142,337,181,335},{192,335,232,280},{244,259,288,108},{285,92,212,13},
+	{96,135,136,118},{194,119,223,125},{105,145,124,134},{110,146,138,151},
+	{131,133,139,146},{188,146,198,134},{189,153,218,146},{204,133,221,140},
+	{91,268,122,202},{149,206,159,209},{170,209,181,204},{235,265,208,199},
+	{121,280,205,284},{112,286,160,301},{166,301,214,287} };
+
+	int x, y, i, j;
+	double u;	// 수직 교차점의 위치
+	double h;	// 제어선으로부터 픽셀의 수직 변위
+	double d;	// 제어선과 픽셀 사이의 거리
+	double tx, ty;	// 결과영상 픽셀에 대응되는 입력 영상 픽셀 사이의 변위의 합 
+	double xp, yp;	// 각 제어선에 대해 계산된 입력 영상의 대응되는 픽셀 위치
+	double weight;	// 각 제어선의 가중치
+	double totalweight;	// 가중치의 합
+	double a = 0.001;	// 0을 나누지 않기 위한 변수
+	double b = 2.0;		// 어느정도 끌려올지, 찌그러질지
+	double p = 0.75;
+
+	unsigned char** warpedImg;
+	unsigned char** warpedImg2;
+	int frame;
+	double fweight;
+	control_line warp_lines[23];
+	double tx2, ty2, xp2, yp2;
+	int dest_x1, dest_y1, dest_x2, dest_y2, source_x2, source_y2;
+	int x1, x2, y1, y2, src_x1, src_y1, src_x2, src_y2;
+	double src_line_length, dest_line_length;
+
+	int num_lines = 23;	// 제어선의 개수
+	int line;
+	int source_x, source_y;
+	int last_row, last_col;
+
+	CFileDialog dlg(TRUE);	// 파일 선택 다이얼로그
+
+	if (dlg.DoModal() != IDOK) // DoModal 호출하면 뜸 // IDOK = 확인 // IDCANCEL == 취소
+		return;	// 사용자가 확인버튼을 누르지 않았을 경우 종료
+
+	CFile file;
+	file.Open(dlg.GetPathName(), CFile::modeRead); // 파일 열어서 읽기모드
+	CArchive ar(&file, CArchive::load);
+	pDoc->LoadSecondImageFile(ar);	// 두 번째 이미지 파일 열기
+	file.Close();
+	// 워핑 배열 할당
+	warpedImg = (unsigned char**)malloc(pDoc->imageHeight * sizeof(unsigned char*));
+	warpedImg2 = (unsigned char**)malloc(pDoc->imageHeight * sizeof(unsigned char*));
+	for (int i = 0; i < pDoc->imageHeight; i++) {
+		warpedImg[i] = (unsigned char*)malloc(pDoc->imageWidth * pDoc->depth);
+		warpedImg2[i] = (unsigned char*)malloc(pDoc->imageWidth * pDoc->depth);
+	}
+	// 모핑 배열 할당
+	for (i = 0; i < NUM_FRAMES; i++) {
+		pDoc->morphedImg[i] = (unsigned char**)malloc(pDoc->imageHeight * sizeof(unsigned char*));
+		for (j = 0; j < pDoc->imageHeight; j++)
+			pDoc->morphedImg[i][j] = (unsigned char*) malloc(pDoc->imageWidth * pDoc->depth);
+	}
+	last_row = pDoc->imageHeight - 1;
+	last_col = pDoc->imageWidth - 1;
+	// 프레임 수만큼 반복
+	for (frame = 1; frame <= NUM_FRAMES; frame++) {
+		fweight = (double)(frame) / NUM_FRAMES;	// 중간 프레임의 가중치 계산
+		for (line = 0; line < num_lines; line++) {	// 제어선의 좌표를 현재 프레임에 대한 좌표로 변환
+			warp_lines[line].Px = (int)(source_lines[line].Px + (dest_lines[line].Px - source_lines[line].Px) * fweight);
+			warp_lines[line].Py = (int)(source_lines[line].Py + (dest_lines[line].Py - source_lines[line].Py) * fweight);
+			warp_lines[line].Qx = (int)(source_lines[line].Qx + (dest_lines[line].Qx - source_lines[line].Qx) * fweight);
+			warp_lines[line].Qy = (int)(source_lines[line].Qy + (dest_lines[line].Qy - source_lines[line].Qy) * fweight);
+		}
+		for (y = 0; y < pDoc->imageHeight; y++) {	// 영상의 모든 픽셀에 대해 변환 수행
+			for (x = 0; x < pDoc->imageWidth; x++) {
+				totalweight = 0.0;
+				tx = 0.0;
+				ty = 0.0;
+				tx2 = 0.0;
+				ty2 = 0.0;
+				// 모든 제어선에 대해 가중치 계산
+				for (line = 0; line < num_lines; line++) {
+					x1 = warp_lines[line].Px;
+					y1 = warp_lines[line].Py;
+					x2 = warp_lines[line].Qx;
+					y2 = warp_lines[line].Qy;
+					dest_line_length = sqrt((double)(x2 - x1) * (x2 - x1) + (y2 - y1) * (y2 - y1));
+					// 수직 교차점의 위치 및 픽셀의 수직 변위 계산
+					u = (double)((x - x1) * (x2 - x1) + (y - y1) * (y2 - y1)) / (double)((x2 - x1) * (x2 - x1) + (y2 - y1) * (y2 - y1));
+					h = ((y - y1) * (x2 - x1) - (x - x1) * (y2 - y1)) / dest_line_length;
+					// 제어선과 픽셀 사이의 거리 계산
+					if (u < 0) d = sqrt((x - x1) * (x - x1) + (y - y1) * (y - y1));
+					else if (u > 1) d = sqrt((x - x2) * (x - x2) + (y - y2) * (y - y2));
+					else d = fabs(h);	// 절댓값
+
+					src_x1 = source_lines[line].Px;
+					src_y1 = source_lines[line].Py;
+					src_x2 = source_lines[line].Qx;
+					src_y2 = source_lines[line].Qy;
+					src_line_length = sqrt((src_x2 - src_x1) * (src_x2 - src_x1) + (src_y2 - src_y1) * (src_y2 - src_y1));
+
+					dest_x1 = dest_lines[line].Px;
+					dest_y1 = dest_lines[line].Py;
+					dest_x2 = dest_lines[line].Qx;
+					dest_y2 = dest_lines[line].Qy;
+					dest_line_length = sqrt((dest_x2 - dest_x1) * (dest_x2 - dest_x1) + (dest_y2 - dest_y1) * (dest_y2 - dest_y1));
+					// 입력 영상에서의 대응 픽셀 위치 계산
+					xp = src_x1 + u * (src_x2 - src_x1) - h * (src_y2 - src_y1) / src_line_length;
+					yp = src_y1 + u * (src_y2 - src_y1) + h * (src_x2 - src_x1) / src_line_length;
+					
+					xp2 = dest_x1 + u * (dest_x2 - dest_x1) - h * (dest_y2 - dest_y1) / dest_line_length;
+					yp2 = dest_y1 + u * (dest_y2 - dest_y1) + h * (dest_x2 - dest_x1) / dest_line_length;
+					// 제어선에 대한 가중치 계산
+					weight = pow(pow(dest_line_length, p) / (a + d), b);
+					// 대응 픽셀과의 변위 계산
+					tx += (xp - x) * weight;
+					ty += (yp - y) * weight;
+					
+					tx2 += (xp2 - x) * weight;
+					ty2 += (yp2 - y) * weight;
+					
+					totalweight += weight;
+				}
+				// 대응 픽셀 위치 계산
+				source_x = x + (tx / totalweight + 0.5);
+				source_y = y + (ty / totalweight + 0.5);
+
+				source_x2 = x + (tx2 / totalweight + 0.5);
+				source_y2 = y + (ty2 / totalweight + 0.5);
+				// 영상의 경계를 벗어나는지 검사
+				if (source_x < 0)source_x = 0;
+				if (source_x > last_col)source_x = last_col;
+				if (source_y < 0)source_y = 0;
+				if (source_y > last_row)source_y = last_row;
+
+				if (source_x2 < 0)source_x2 = 0;
+				if (source_x2 > last_col)source_x2 = last_col;
+				if (source_y2 < 0)source_y2 = 0;
+				if (source_y2 > last_row)source_y2 = last_row;
+				// 결과 이미지 배열에 값 저장
+				//if (pDoc->depth == 1) {
+					warpedImg[y][x] = pDoc->inputImg[source_y][source_x];
+					warpedImg2[y][x] = pDoc->inputImg2[source_y2][source_x2];
+				/* }
+				else {
+					warpedImg[y][3 * x + 0] = pDoc->inputImg[source_y][3 * source_x + 0];
+					warpedImg[y][3 * x + 1] = pDoc->inputImg[source_y][3 * source_x + 1];
+					warpedImg[y][3 * x + 2] = pDoc->inputImg[source_y][3 * source_x + 2];
+					
+					warpedImg2[y][3 * x + 0] = pDoc->inputImg2[source_y2][3 * source_x2 + 0];
+					warpedImg2[y][3 * x + 1] = pDoc->inputImg2[source_y2][3 * source_x2 + 1];
+					warpedImg2[y][3 * x + 2] = pDoc->inputImg2[source_y2][3 * source_x2 + 2];
+				}*/
+			}
+			// 결과 이미지에 두 입력 이미지를 혼합하여 저장
+			for (y = 0; y < pDoc->imageHeight; y++)
+				for (x = 0; x < pDoc->imageWidth; x++) {
+					int val = (int)((1.0 - fweight) * warpedImg[y][x] + fweight * warpedImg2[y][x]);
+					if (val < 0)val = 0;
+					if (val > 255) val = 255;
+					pDoc->morphedImg[frame - 1][y][x] = val;
+				}
+		}
+	}
+	viewMode = MORPHING;
+	Invalidate(FALSE);
+}
+
+
+void CImageProc20190806View::OnOpencv()
+{
+	COpenCVDlg dlg;
+
+	dlg.DoModal();	// 다이얼로그 띄우기
 }

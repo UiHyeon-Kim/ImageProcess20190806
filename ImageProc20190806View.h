@@ -14,6 +14,7 @@ protected: // serialization에서만 만들어집니다.
 // 특성입니다.
 public:
 	CImageProc20190806Doc* GetDocument() const;
+	int viewMode;
 
 // 작업입니다.
 public:
@@ -83,6 +84,8 @@ public:
 	bool bAviMode;
 	CString AviFileName;
 	void LoadAviFIle(CDC* pDC);
+	afx_msg void OnGeometryMorphing();
+	afx_msg void OnOpencv();
 };
 
 #ifndef _DEBUG  // ImageProc20190806View.cpp의 디버그 버전

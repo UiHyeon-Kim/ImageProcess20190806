@@ -9,7 +9,11 @@
 #define ID_WINDOW_MANAGER               131
 #define IDD_DIALOG_ANGLEINPUT           311
 #define IDD_DIALOG1                     311
+#define IDD_DIALOG_OPENCV               313
 #define IDC_EDIT2                       1001
+#define IDC_BUTTON_FILE_SELECT          1002
+#define IDC_BUTTON__VIDEO               1003
+#define IDC_BUTTON_CAMERA               1004
 #define ID_32771                        32771
 #define ID_32772                        32772
 #define ID_PIXEL_ADD                    32773
@@ -86,14 +90,18 @@
 #define ID_GEOMETRY_WARPING             32844
 #define ID_AVI32845                     32845
 #define ID_AVI_VIEW                     32846
+#define ID_32847                        32847
+#define ID_GEOMETRY_MORPHING            32848
+#define ID_OPENCV32849                  32849
+#define ID_OPENCV                       32850
 
 // Next default values for new objects
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
-#define _APS_NEXT_RESOURCE_VALUE        313
-#define _APS_NEXT_COMMAND_VALUE         32847
-#define _APS_NEXT_CONTROL_VALUE         1002
+#define _APS_NEXT_RESOURCE_VALUE        315
+#define _APS_NEXT_COMMAND_VALUE         32851
+#define _APS_NEXT_CONTROL_VALUE         1005
 #define _APS_NEXT_SYMED_VALUE           310
 #endif
 #endif
