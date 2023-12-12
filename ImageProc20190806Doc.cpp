@@ -38,6 +38,7 @@ CImageProc20190806Doc::CImageProc20190806Doc() noexcept
 	inputImg2 = NULL;
 	resultImg = NULL;	// 사용중인지 확인하기 위해
 	gResultImg = NULL;
+	for (int i = 0; i < 10; i++) morphedImg[i] = NULL;
 }
 
 CImageProc20190806Doc::~CImageProc20190806Doc()
@@ -61,6 +62,14 @@ CImageProc20190806Doc::~CImageProc20190806Doc()
 		for (int i = 0; i < gImageHeight; i++)
 			free(gResultImg[i]);
 		free(gResultImg);
+	}
+	for (int i = 0; i < 10; i++) {
+		if (morphedImg[i] != NULL) {
+			int  j;
+			for (j = 0; j < imageHeight; j++)
+				free(morphedImg[i][j]);
+			free(morphedImg[i]);
+		}
 	}
 }
 
