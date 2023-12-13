@@ -12,7 +12,6 @@
 
 #include "ImageProc20190806Doc.h"
 #include "ImageProc20190806View.h"
-#include "COpenCvDlg.h"
 
 #include <vfw.h>
 
@@ -69,7 +68,6 @@ ON_WM_LBUTTONDOWN()
 ON_WM_LBUTTONUP()
 ON_COMMAND(ID_AVI_VIEW, &CImageProc20190806View::OnAviView)
 ON_COMMAND(ID_GEOMETRY_MORPHING, &CImageProc20190806View::OnGeometryMorphing)
-ON_COMMAND(ID_OPENCV, &CImageProc20190806View::OnOpencv)
 END_MESSAGE_MAP()
 
 // CImageProc20190806View 생성/소멸
@@ -1287,8 +1285,8 @@ void CImageProc20190806View::OnGeometryZoomoutAvgFiltering()
 		pDoc->gResultImg[i] = (unsigned char*)malloc(pDoc->gImageWidth * pDoc->depth);
 
 	// 전방향 사상
-	for (y = 0; y < pDoc->imageHeight; y += yscale)
-		for (x = 0; x < pDoc->imageWidth; x += xscale) {
+	for (y = 0; y < pDoc->imageHeight-yscale; y += yscale)
+		for (x = 0; x < pDoc->imageWidth-xscale; x += xscale) {
 			if (pDoc->depth == 1) {
 				sum = 0;
 				for (j = 0; j < yscale; j++) 
@@ -1780,10 +1778,3 @@ void CImageProc20190806View::OnGeometryMorphing()
 	Invalidate(FALSE);
 }
 
-
-void CImageProc20190806View::OnOpencv()
-{
-	COpenCVDlg dlg;
-
-	dlg.DoModal();	// 다이얼로그 띄우기
-}

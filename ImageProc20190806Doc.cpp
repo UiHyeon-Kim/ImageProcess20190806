@@ -259,7 +259,7 @@ void CImageProc20190806Doc::LoadImageFile(CArchive& ar)	//Serialize를 통해 �
 	}
 	else {
 		// 파일에서 읽어서 저장
-		BYTE nu[4*3];
+		BYTE nu[4];
 		int widthfile;
 		widthfile = (imageWidth * 8 + 31) / 32 * 4;
 		for (int i = 0; i < imageHeight; i++) {
@@ -364,7 +364,7 @@ void CImageProc20190806Doc::LoadSecondImageFile(CArchive& ar)
 	}
 	else {
 		// 파일에서 읽어서 저장
-		BYTE nu[4 * 3];
+		BYTE nu[4];
 		int widthfile;
 		widthfile = (imageWidth * 8 + 31) / 32 * 4;
 		for (int i = 0; i < imageHeight; i++) {
