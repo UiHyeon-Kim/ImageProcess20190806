@@ -191,7 +191,6 @@
   <ItemGroup>
     <ClInclude Include="CAngleDialog.h" />
     <ClInclude Include="ChildFrm.h" />
-    <ClInclude Include="COpenCVDlg.h" />
     <ClInclude Include="framework.h" />
     <ClInclude Include="ImageProc20190806.h" />
     <ClInclude Include="ImageProc20190806Doc.h" />
@@ -204,7 +203,6 @@
   <ItemGroup>
     <ClCompile Include="CAngleDialog.cpp" />
     <ClCompile Include="ChildFrm.cpp" />
-    <ClCompile Include="COpenCVDlg.cpp" />
     <ClCompile Include="ImageProc20190806.cpp" />
     <ClCompile Include="ImageProc20190806Doc.cpp" />
     <ClCompile Include="ImageProc20190806View.cpp" />
